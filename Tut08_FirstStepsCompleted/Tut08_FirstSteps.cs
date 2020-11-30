@@ -22,7 +22,9 @@ namespace FuseeApp
         private SceneContainer _scene;
         private SceneRendererForward _sceneRenderer;
         private float _camAngle = 0;
-        private Transform _cubeTransform;
+
+        private List<Transform> cTransform = new List<Transform>();
+        private int maxIndex = 3;
 
 
         // Init is called on startup. 
@@ -31,23 +33,33 @@ namespace FuseeApp
             // Set the clear color for the backbuffer to white (100% intensity in all color channels R, G, B, A).
             RC.ClearColor = new float4(1, 1, 1, 1);
 
+            var cubeNodes = new List<SceneNode>();
+
             // Create a scene with a cube
             // The three components: one Transform, one ShaderEffect (blue material) and the Mesh
-            _cubeTransform = new Transform {Translation = new float3(0, 0, 0)};
+            for (int i = 0; i < maxIndex; i++)
+            {
+                cTransform.Add(new Transform { Translation = new float3(i * 15, (i + 1) * 5, 0) });
 
-            var cubeShader = MakeEffect.FromDiffuseSpecular((float4)ColorUint.Blue, float4.Zero);
+                var cubeShader = MakeEffect.FromDiffuseSpecular((float4)ColorUint.Blue, float4.Zero);
 
-            var cubeMesh = SimpleMeshes.CreateCuboid(new float3(10, 10, 10));
+                var cubeMesh = SimpleMeshes.CreateCuboid(new float3(10, 10, 10));
 
-            // Assemble the cube node containing the three components
-            var cubeNode = new SceneNode();
-            cubeNode.Components.Add(_cubeTransform);
-            cubeNode.Components.Add(cubeShader);
-            cubeNode.Components.Add(cubeMesh);
+                // Assemble the cube node containing the three components
+                var cubeNode = new SceneNode();
+                cubeNode.Components.Add(cTransform[i]);
+                cubeNode.Components.Add(cubeShader);
+                cubeNode.Components.Add(cubeMesh);
+                cubeNodes.Add(cubeNode);
+            }
 
             // Create the scene containing the cube as the only object
             _scene = new SceneContainer();
-            _scene.Children.Add(cubeNode);
+
+            foreach (var cNode in cubeNodes)
+            {
+                _scene.Children.Add(cNode);
+            }
 
             // Create a scene renderer holding the scene above
             _sceneRenderer = new SceneRendererForward(_scene);
@@ -62,10 +74,24 @@ namespace FuseeApp
             RC.Clear(ClearFlags.Color | ClearFlags.Depth);
 
             // Animate the camera angle
-            _camAngle = _camAngle + 90.0f * M.Pi/180.0f * DeltaTime ;
+            _camAngle = _camAngle + 90.0f * M.Pi / 180.0f * DeltaTime;
 
             // Animate the cube
-            _cubeTransform.Translation = new float3(0, 5 * M.Sin(3 * TimeSinceStart), 0);
+            cTransform[0].Translation = new float3(0, 5 * M.Sin(3 * TimeSinceStart), 0);
+
+            for (int i = 1; i < maxIndex; i++)
+            {
+                var scale = cTransform[i].Scale;
+                if (scale.y > 0.2)
+                {
+                    scale = new float3(scale.x, scale.y - 0.3f * DeltaTime, scale.z);
+                }
+                else
+                {
+                    scale.y = 1;
+                }
+                cTransform[i].Scale = scale;
+            }
 
             // Setup the camera 
             RC.View = float4x4.CreateTranslation(0, 0, 50) * float4x4.CreateRotationY(_camAngle);
@@ -89,7 +115,7 @@ namespace FuseeApp
             // Back clipping happens at 2000 (Anything further away from the camera than 2000 world units gets clipped, polygons will be cut)
             var projection = float4x4.CreatePerspectiveFieldOfView(M.PiOver4, aspectRatio, 1, 20000);
             RC.Projection = projection;
-        }        
+        }
 
     }
 }

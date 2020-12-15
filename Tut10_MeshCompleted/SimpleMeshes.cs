@@ -10,7 +10,7 @@ using Fusee.Serialization;
 
 namespace FuseeApp
 {
-    public static class SimpleMeshes 
+    public static class SimpleMeshes
     {
         public static Mesh CreateCuboid(float3 size)
         {
@@ -121,7 +121,7 @@ namespace FuseeApp
                     new float2(0, 1),
                     new float2(0, 0)
                 },
-                BoundingBox = new AABBf(-0.5f * size, 0.5f*size)
+                BoundingBox = new AABBf(-0.5f * size, 0.5f * size)
             };
         }
 
@@ -136,9 +136,9 @@ namespace FuseeApp
 
         public static Mesh CreateCylinder(float radius, float height, int segments)
         {
-            float3[] verts = new float3[segments+1];
-            float3[] norms = new float3[segments+1];
-            ushort[] tris  = new ushort[segments * 3];
+            float3[] verts = new float3[segments + 1];
+            float3[] norms = new float3[segments + 1];
+            ushort[] tris = new ushort[segments * 3];
 
             float delta = 2 * M.Pi / segments;
 
@@ -157,10 +157,15 @@ namespace FuseeApp
                 norms[i] = float3.UnitY;
 
                 // Stitch the current segment (using the center, the current and the previous point)
-                tris[3*i - 1] = (ushort) segments; // center point
-                tris[3*i - 2] = (ushort) i;        // current segment point
-                tris[3*i - 3] = (ushort) (i-1);    // previous segment point
+                tris[3 * i - 1] = (ushort)segments; // center point
+                tris[3 * i - 2] = (ushort)i;        // current segment point
+                tris[3 * i - 3] = (ushort)(i - 1);    // previous segment point
             }
+
+            // Stitch the last segment (using the center, the current and the previous point)
+            tris[3 * segments - 1] = (ushort)segments; // center point
+            tris[3 * segments - 2] = tris[0];        // current segment point
+            tris[3 * segments - 3] = tris[3 * (segments - 1) - 2];    // previous segment point
 
             return new Mesh
             {
